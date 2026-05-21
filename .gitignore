@@ -1,0 +1,31 @@
+# Node modules
+**/node_modules/
+
+# Build output
+**/.next/
+**/dist/
+**/build/
+**/out/
+
+# Python virtual environments and caches
+**/venv/
+**/venv\
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+
+# Environment variables
+**/.env
+
+# Temporary files
+**/temp/
+*.log
+.DS_Store
+
+# Ignore nested repository files
+**/.git
+
+# Vite cache
+**/.vite/
+
+# npm package lock can be tracked
