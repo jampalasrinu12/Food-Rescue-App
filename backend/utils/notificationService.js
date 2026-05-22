@@ -112,6 +112,8 @@ function getEventTitle(eventType) {
     DONATION_POSTED: "🍱 New Food Donation",
     DONATION_ACCEPTED: "✅ Donation Accepted!",
     PICKUP_ASSIGNED: "🚚 Pickup Assigned",
+    PICKUP_ACCEPTED: "✅ Pickup Accepted",
+    PICKUP_IN_PROGRESS: "🚚 Pickup In Progress",
     PICKUP_ARRIVED: "🚗 Pickup Team Arrived",
     PICKUP_COMPLETED: "✨ Delivery Complete!",
     DONATION_EXPIRED: "⏰ Donation Expired"
@@ -127,6 +129,8 @@ function getEventMessage(eventType, data) {
     DONATION_POSTED: `New donation: ${data.food_name || "Food"} (${data.quantity || "qty"})`,
     DONATION_ACCEPTED: `${data.ngo_name || "NGO"} accepted your donation of ${data.food_name || "food"}`,
     PICKUP_ASSIGNED: `Pickup team assigned for your donation`,
+    PICKUP_ACCEPTED: `Pickup team accepted your order`,
+    PICKUP_IN_PROGRESS: `Food has been picked up and is on its way`,
     PICKUP_ARRIVED: `Pickup team is here to collect your donation`,
     PICKUP_COMPLETED: `Your donation was successfully delivered!`,
     DONATION_EXPIRED: `Your donation has expired and is no longer available`

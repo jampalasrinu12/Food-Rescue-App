@@ -8,9 +8,6 @@ require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
 const express = require("express");
 const cors = require("cors");
-const axios = require("axios");
-const multer = require("multer");
-const FormData = require("form-data");
 const http = require("http");
 const { Server } = require("socket.io");
 
@@ -23,6 +20,7 @@ const donationRoutes = require("./routes/donationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const profileRoutes = require("./routes/profile");
 const notificationRoutes = require("./routes/notificationRoutes");
+const aiRoutes = require("./routes/ai.routes");
 
 // 🔥 Analytics Engine (auto-runs)
 require("./analyticsEngine");
@@ -110,7 +108,7 @@ io.on("connection", (socket) => {
 
   // ===== LIVE TRACKING =====
   // Pickup team sends real-time location
-  socket.on("pickup-location-update", (data) => {
+  const handlePickupLocation = (data) => {
     const { donationId, lat, lng, pickupUserId } = data || {};
 
     if (!donationId || typeof lat !== "number" || typeof lng !== "number") {
@@ -139,6 +137,33 @@ io.on("connection", (socket) => {
         if (err) console.error("Tracking DB Error:", err);
       }
     );
+  };
+
+  socket.on("pickup-location-update", handlePickupLocation);
+  socket.on("pickup-location", handlePickupLocation); // alias for legacy clients
+
+  socket.on("pickup-arrived", (data) => {
+    const { donationId, pickupUserId, lat, lng } = data || {};
+    if (!donationId) return;
+
+    io.to(`donation_${donationId}`).emit("pickup-arrived", {
+      donationId,
+      pickupUserId: pickupUserId || null,
+      lat,
+      lng,
+      timestamp: Date.now()
+    });
+  });
+
+  socket.on("pickup-completed", (data) => {
+    const { donationId, pickupUserId } = data || {};
+    if (!donationId) return;
+
+    io.to(`donation_${donationId}`).emit("pickup-completed", {
+      donationId,
+      pickupUserId: pickupUserId || null,
+      timestamp: Date.now()
+    });
   });
 
   // Check if pickup arrived at donor (distance < 50m)
@@ -183,79 +208,7 @@ app.delete("/test-delete", (req,res)=>{
 });
 app.use("/api/profile", profileRoutes);
 app.use("/api/notifications", notificationRoutes);
-
-// ===============================
-// 🔥 AI ROUTE
-// ===============================
-
-// Use MEMORY storage (no temp files)
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
-});
-
-/**
- * 🧠 AI FOOD FRESHNESS ANALYSIS
- * Receives:
- * - image
- * - food_name
- * - prepared_time
- * - expiry_time
- * - donor_lat
- * - donor_lng
- * - street
- */
-app.post("/api/ai/analyze", upload.single("image"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: "Image is required" });
-    }
-
-    const {
-      food_name,
-      prepared_time,
-      expiry_time,
-      donor_lat,
-      donor_lng,
-      street
-    } = req.body;
-
-    // 🔹 Build FormData for FastAPI
-    const formData = new FormData();
-    formData.append("file", req.file.buffer, {
-      filename: "food.jpg",
-      contentType: req.file.mimetype
-    });
-
-    // Send metadata
-    formData.append("food_name", food_name || "");
-    formData.append("prepared_time", prepared_time || "");
-    formData.append("expiry_time", expiry_time || "");
-    formData.append("donor_lat", donor_lat || "");
-    formData.append("donor_lng", donor_lng || "");
-    formData.append("street", street || "");
-
-    // 🔥 Send to Python AI server
-    const aiResponse = await axios.post(
-      "http://127.0.0.1:8000/analyze-food", // ✅ MATCHES FastAPI
-      formData,
-      {
-        headers: formData.getHeaders(),
-        timeout: 30000
-      }
-    );
-
-    // ✅ Return AI result
-    res.json(aiResponse.data);
-
-  } catch (error) {
-    console.error("🧠 AI ERROR:", error.response?.data || error.message);
-    res.status(500).json({
-      error: "AI analysis failed",
-      details: error.response?.data || error.message
-    });
-  }
-});
+app.use("/api/ai", aiRoutes);
 
 // ===============================
 // START SERVER

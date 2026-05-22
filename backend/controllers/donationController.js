@@ -58,16 +58,13 @@ const food_image = req.file ? req.file.filename : null;
 
       const donationId = result.insertId;
 
-// 🔥 AUTO SAVE LOCATION INTO PROFILE (FINAL VERSION)
-const user_id = req.user.id;
+      // 🔥 AUTO SAVE LOCATION INTO PROFILE (FINAL VERSION)
+      const city = donor_address?.split(",").pop()?.trim() || "";
 
-// 👉 split address (basic logic)
-const city = donor_address?.split(",").pop()?.trim() || "";
-
-db.query(
-  "SELECT id FROM profile WHERE user_id=?",
-  [user_id],
-  (errCheck, rows) => {
+      db.query(
+        "SELECT id FROM profile WHERE user_id=?",
+        [user_id],
+        (errCheck, rows) => {
 
     if (rows && rows.length > 0) {
 
@@ -99,34 +96,22 @@ db.query(
     }
   }
 );
-// 🔥 NOTIFICATION ADD HERE
-const io = req.app.get("io");
+      const io = req.app.get("io");
+      const ngoMessage = "🍱 New donation available";
 
-// 🔥 NGO ki matrame
-const ngoMessage = "🍱 New donation available";
+      notifyService.notifyRole(io, "ngo", "DONATION_POSTED", {
+        donation_id: donationId,
+        food_name,
+        quantity,
+        message: ngoMessage
+      });
 
-// 🔥 SAVE TO DB
-db.query(
-  "INSERT INTO notifications (role, message) VALUES (?, ?)",
-  ["ngo", ngoMessage]
-);
-
-db.query(
-  "INSERT INTO notifications (role, message) VALUES (?, ?)",
-  ["receiver", ngoMessage]
-);
-
-// 🔥 SOCKET
-io.to("ngo").emit("notification", {
-  message: ngoMessage,
-  donation_id: donationId,
-  food_name,
-});
-io.to("receiver").emit("notification", {
-  message: ngoMessage,
-  donation_id: donationId,
-  food_name,
-});
+      notifyService.notifyRole(io, "receiver", "DONATION_POSTED", {
+        donation_id: donationId,
+        food_name,
+        quantity,
+        message: ngoMessage
+      });
 
 // 💚 Donor ki thank you message
 const messages = [
@@ -137,18 +122,13 @@ const messages = [
 
 const msg = messages[Math.floor(Math.random() * messages.length)];
 
-// 🔥 SAVE
-db.query(
-  "INSERT INTO notifications (role, message) VALUES (?, ?)",
-  ["donor", msg]
-);
+      notifyService.notifyUser(io, user_id, "DONATION_POSTED", {
+        donation_id: donationId,
+        title: "Thank you for donating!",
+        message: msg
+      });
 
-// 🔥 SOCKET to donating user only
-io.to(user_id).emit("notification", {
-  message: msg,
-});
-
-// history insert
+      // history insert
 db.query(
   `INSERT INTO donation_history 
    (donation_id, action, new_status, remarks, food_image)
@@ -295,24 +275,14 @@ exports.acceptDonation = (req, res) => {
       }
 const io = req.app.get("io");
 
-const message = "📦 Pickup assigned";
-
-db.query(
-  "INSERT INTO notifications (role, message) VALUES (?, ?)",
-  ["pickup", message]
-);
-
-io.to("pickup").emit("notification", {
-  message,
+notifyService.notifyRole(io, "pickup", "PICKUP_ASSIGNED", {
+  donation_id: id,
+  message: "📦 Pickup assigned"
 });
 
-db.query(
-  "INSERT INTO notifications (role, message) VALUES (?, ?)",
-  ["admin", message]
-);
-
-io.to("admin").emit("notification", {
-  message,
+notifyService.notifyRole(io, "admin", "PICKUP_ASSIGNED", {
+  donation_id: id,
+  message: "📦 Donation accepted and pickup assigned"
 });
       res.json({ message: "Donation accepted successfully" });
     });
@@ -349,18 +319,19 @@ WHERE id=? AND pickup_status='ASSIGNED'
        VALUES (?, ?, 'ACCEPTED')`,
       [id, pickup_time]
     );
-db.query(
-  `INSERT INTO donation_history 
-   (donation_id, action, new_status, remarks)
-   VALUES (?, 'SCHEDULED', 'pickup_scheduled', ?)`,
-  [id, pickup_time]
-);
-const io = req.app.get("io");
+    db.query(
+      `INSERT INTO donation_history 
+       (donation_id, action, new_status, remarks)
+       VALUES (?, 'SCHEDULED', 'pickup_scheduled', ?)`,
+      [id, pickup_time]
+    );
+    const io = req.app.get("io");
 
-io.to("pickup").emit("notification", {
-  message: "🚚 Pickup scheduled",
-});
-	
+    notifyService.notifyRole(io, "pickup", "PICKUP_ASSIGNED", {
+      donation_id: id,
+      message: "🚚 Pickup scheduled"
+    });
+
     res.json({ message: "Pickup scheduled successfully" });
   });
 };
@@ -388,19 +359,20 @@ exports.markDelivered = (req, res) => {
         message: "Food must be PICKED before delivery"
       });
     }
-db.query(
-  `INSERT INTO donation_history 
-   (donation_id, action, new_status)
-   VALUES (?, 'DELIVERED', 'donated')`,
-  [id]
-);
-const io = req.app.get("io");
+      db.query(
+        `INSERT INTO donation_history 
+         (donation_id, action, new_status)
+         VALUES (?, 'DELIVERED', 'donated')`,
+        [id]
+      );
+      const io = req.app.get("io");
 
-io.to("donor").emit("notification", {
-  message: "🎉 Food delivered successfully",
-});
+      notifyService.notifyRole(io, "donor", "PICKUP_COMPLETED", {
+        donation_id: id,
+        message: "🎉 Food delivered successfully"
+      });
 
-    res.json({ message: "Food delivered successfully" });
+      res.json({ message: "Food delivered successfully" });
   });
 };
 /* 🔥 DELETE DONATION — ADMIN */
@@ -486,11 +458,13 @@ db.query(
 );
 const io = req.app.get("io");
 
-io.to("ngo").emit("notification", {
-  message: "📦 Pickup accepted by team",
+notifyService.notifyRole(io, "ngo", "PICKUP_ACCEPTED", {
+  donation_id: id,
+  message: "📦 Pickup accepted by team"
 });
-io.to("receiver").emit("notification", {
-  message: "📦 Pickup accepted by team",
+notifyService.notifyRole(io, "receiver", "PICKUP_ACCEPTED", {
+  donation_id: id,
+  message: "📦 Pickup accepted by team"
 });
 
     res.json({message:"Pickup order accepted"});
@@ -529,8 +503,9 @@ db.query(
 );
 const io = req.app.get("io");
 
-io.to("donor").emit("notification", {
-  message: "📍 Pickup team arrived",
+notifyService.notifyRole(io, "donor", "PICKUP_ARRIVED", {
+  donation_id: id,
+  message: "📍 Pickup team arrived"
 });
 
 
@@ -565,11 +540,13 @@ db.query(
 );
 const io = req.app.get("io");
 
-io.to("ngo").emit("notification", {
-  message: "🍱 Food picked",
+notifyService.notifyRole(io, "ngo", "PICKUP_IN_PROGRESS", {
+  donation_id: id,
+  message: "🍱 Food picked"
 });
-io.to("receiver").emit("notification", {
-  message: "🍱 Food picked",
+notifyService.notifyRole(io, "receiver", "PICKUP_IN_PROGRESS", {
+  donation_id: id,
+  message: "🍱 Food picked"
 });
 
     res.json({message:"Food picked successfully"});
