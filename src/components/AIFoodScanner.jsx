@@ -6,7 +6,7 @@ function AIFoodScanner() {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [foodName, setFoodName] = useState("");
-  const [cookedTime, setCookedTime] = useState("");
+  const [preparedTime, setPreparedTime] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,7 +23,7 @@ function AIFoodScanner() {
 
     if (!image) return setError("⚠ Please upload food image");
     if (!foodName) return setError("⚠ Enter food name");
-    if (!cookedTime) return setError("⚠ Select cooked time");
+    if (!preparedTime) return setError("⚠ Select prepared time");
 
     setError("");
     setLoading(true);
@@ -32,7 +32,7 @@ function AIFoodScanner() {
     const formData = new FormData();
     formData.append("image", image);
     formData.append("food_name", foodName);
-    formData.append("cooked_time", cookedTime);
+    formData.append("prepared_time", preparedTime);
 
     try {
       const res = await api.post("/ai/analyze", formData);
@@ -51,7 +51,7 @@ function AIFoodScanner() {
     setImage(null);
     setPreview(null);
     setFoodName("");
-    setCookedTime("");
+    setPreparedTime("");
     setResult(null);
     setError("");
   };
@@ -84,8 +84,8 @@ function AIFoodScanner() {
 
       <input
         type="datetime-local"
-        value={cookedTime}
-        onChange={(e) => setCookedTime(e.target.value)}
+        value={preparedTime}
+        onChange={(e) => setPreparedTime(e.target.value)}
         style={{ width: "100%", padding: "10px", borderRadius: "8px", marginTop: "10px" }}
       />
 
@@ -162,23 +162,23 @@ function AIFoodScanner() {
           <h3>📊 Result</h3>
 
           <div style={{
-            background: getColor(result.final_freshness),
+            background: getColor(result.final_freshness || result.freshness),
             color: "white",
             padding: "8px 15px",
             borderRadius: "20px",
             display: "inline-block"
           }}>
-            {result.final_freshness}
+            {result.final_freshness || result.freshness || "Unknown"}
           </div>
 
-          <p><b>Food:</b> {result.food_item}</p>
-          <p><b>Time Passed:</b> {result.time_passed_hours} hrs</p>
-          <p><b>Recommendation:</b> {result.expiry_status}</p>
+          <p><b>Food:</b> {result.food_item || foodName}</p>
+          <p><b>Time Passed:</b> {result.time_passed_hours || result.hours_since_prepared || "N/A"} hrs</p>
+          <p><b>Recommendation:</b> {result.expiry_status || result.ai_note || "N/A"}</p>
 
           <hr />
 
-          <p><b>AI Detected:</b> {result.ai_prediction?.hf_label}</p>
-          <p><b>Confidence:</b> {result.ai_prediction?.hf_confidence}%</p>
+          <p><b>AI Detected:</b> {result.ai_prediction?.hf_label || result.hf_label || "-"}</p>
+          <p><b>Confidence:</b> {result.ai_prediction?.hf_confidence || result.hf_confidence || "-"}%</p>
 
           {result.processed_image && (
             <img

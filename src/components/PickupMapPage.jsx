@@ -99,7 +99,7 @@ function PickupMapPage() {
         setCurrentLng(prev => prev ? prev + (clng - prev) * 0.3 : clng);
 
         if (role === "pickup" && donationId) {
-          socket.emit("pickup-location", {
+          socket.emit("pickup-location-update", {
             donationId,
             lat: clat,
             lng: clng

@@ -25,17 +25,13 @@ function AdminLogin() {
     try{
       setLoading(true);
 
-      await api.post("/admin/verify-otp",{email,otp});
-
-      /* ✅ ADD THIS (VERY IMPORTANT) */
-      sessionStorage.clear(); // ✅ old data remove
-
-sessionStorage.setItem("role","admin");
-sessionStorage.setItem("token","admin-session");
-sessionStorage.setItem("userId","admin");
+      const res = await api.post("/admin/verify-otp",{email,otp});
+      sessionStorage.clear();
+      sessionStorage.setItem("role", res.data.role || "admin");
+      sessionStorage.setItem("token", res.data.token);
+      sessionStorage.setItem("userId", res.data.id || "admin");
 
       alert("Admin Login Successful");
-
       window.location="/admin";
 
     }catch{

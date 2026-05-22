@@ -66,7 +66,7 @@ const [filter, setFilter] = useState("all");
 
   const completePickup = async (id) => {
     try {
-      await api.put(`/donations/${id}/complete`);
+      await api.put(`/donations/${id}/deliver`);
       loadDonations();
     } catch (err) {
       console.error(err);

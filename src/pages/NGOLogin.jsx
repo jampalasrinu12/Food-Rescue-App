@@ -69,9 +69,7 @@ if(res.data.role !== "receiver"){
   return;
 }
 
-// 🔥 ADD THIS LINE
-sessionStorage.setItem("userId", res.data.user.id);
-
+sessionStorage.setItem("userId", res.data.id);
 sessionStorage.setItem("token",res.data.token);
 sessionStorage.setItem("role",res.data.role);
 
@@ -139,9 +137,7 @@ if(res.data.role !== "receiver"){
   return;
 }
 
-// 🔥 ADD THIS
-sessionStorage.setItem("userId", res.data.user.id);
-
+sessionStorage.setItem("userId", res.data.id);
 sessionStorage.setItem("token",res.data.token);
 sessionStorage.setItem("role",res.data.role);
 

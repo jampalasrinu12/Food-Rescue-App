@@ -150,11 +150,7 @@ function AddDonation() {
         aiForm.append("food_name", form.food_name);
         aiForm.append("prepared_time", form.prepared_time);
 
-        const aiRes = await api.post("/ai/analyze", aiForm, {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          }
-        });
+        const aiRes = await api.post("/ai/analyze", aiForm);
 
         aiData = aiRes.data;
 
