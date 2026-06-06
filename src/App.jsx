@@ -60,10 +60,39 @@ function NavLink({ to, children }) {
 function Home() {
 
   const role = sessionStorage.getItem("role");
+  const navigate = useNavigate();
 
   return (
     <div>
       <HeroSection />
+      {!role && (
+        <div style={{ margin: "20px 0", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <button
+            onClick={() => navigate("/admin-login")}
+            style={{ padding: "12px 20px", borderRadius: "999px", border: "none", background: "#5f72ff", color: "white", cursor: "pointer" }}
+          >
+            Admin Login
+          </button>
+          <button
+            onClick={() => navigate("/donor-login")}
+            style={{ padding: "12px 20px", borderRadius: "999px", border: "1px solid #5f72ff", background: "white", color: "#5f72ff", cursor: "pointer" }}
+          >
+            Donor Login
+          </button>
+          <button
+            onClick={() => navigate("/ngo-login")}
+            style={{ padding: "12px 20px", borderRadius: "999px", border: "1px solid #5f72ff", background: "white", color: "#5f72ff", cursor: "pointer" }}
+          >
+            NGO Login
+          </button>
+          <button
+            onClick={() => navigate("/pickup-login")}
+            style={{ padding: "12px 20px", borderRadius: "999px", border: "1px solid #5f72ff", background: "white", color: "#5f72ff", cursor: "pointer" }}
+          >
+            Pickup Login
+          </button>
+        </div>
+      )}
 
       <h2 className="section-title">🔄 How It Works</h2>
 
