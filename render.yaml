@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: food-rescue-backend
+    env: node
+    plan: free
+    branch: all-codes
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Add your database and email config values in the Render dashboard
+      # - key: DB_HOST
+      #   value: your-db-host
+      # - key: DB_USER
+      #   value: your-db-user
+      # - key: DB_PASSWORD
+      #   value: your-db-password
+      # - key: DB_NAME
+      #   value: your-db-name
+      # - key: SMTP_HOST
+      #   value: your-smtp-host
+      # - key: SMTP_USER
+      #   value: your-smtp-user
+      # - key: SMTP_PASS
+      #   value: your-smtp-password
+      # - key: JWT_SECRET
+      #   value: your-jwt-secret
+      # - key: FRONTEND_URL
+      #   value: https://jampalasrinu12.github.io/Food-Rescue-App/
