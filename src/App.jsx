@@ -1,4 +1,4 @@
-import { Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
+import { Routes, Route, Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 
 import AddDonation from "./components/AddDonation";
 import DonationList from "./components/DonationList";
@@ -252,6 +252,8 @@ useEffect(() => {
     location.pathname === "/ngo-login" ||
     location.pathname === "/pickup-login";
 
+  const navigate = useNavigate();
+
   /* 🔓 LOGOUT FUNCTION */
   const logout = () => {
 
@@ -260,11 +262,11 @@ useEffect(() => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("role");
 
-    if(role === "admin") window.location="/admin-login";
-    else if(role === "donor") window.location="/donor-login";
-    else if(role === "receiver") window.location="/ngo-login";
-    else if(role === "pickup") window.location="/pickup-login";
-    else window.location="/";
+    if (role === "admin") navigate("/admin-login");
+    else if (role === "donor") navigate("/donor-login");
+    else if (role === "receiver") navigate("/ngo-login");
+    else if (role === "pickup") navigate("/pickup-login");
+    else navigate("/");
 
   };
 

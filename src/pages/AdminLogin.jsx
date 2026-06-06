@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 
 function AdminLogin() {
+  const navigate = useNavigate();
 
   const [email,setEmail] = useState("");
   const [otp,setOtp] = useState("");
@@ -32,7 +34,7 @@ function AdminLogin() {
       sessionStorage.setItem("userId", res.data.id || "admin");
 
       alert("Admin Login Successful");
-      window.location="/admin";
+      navigate("/admin");
 
     }catch{
       alert("Invalid OTP");
